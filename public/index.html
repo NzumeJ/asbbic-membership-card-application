@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASBBIC - Membership Card Generator</title>
+    <title>ASBBIC - Générateur de cartes de membre / Membership Card Generator</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
@@ -13,7 +13,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <img src="/images/logo.png" alt="ASBBIC Logo" style="height: 40px; width: auto; margin-right: 10px;">
-                <span>ASBBIC Membership</span>
+                <span>ASBBIC <span class="d-none d-sm-inline">Membership</span> <small class="d-none d-sm-inline text-white-50">/ Adhésion</small></span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -21,10 +21,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">Home</a>
+                        <a class="nav-link active" href="/">
+                            <span class="d-none d-sm-inline">Home</span>
+                            <span class="d-inline d-sm-none">Accueil / Home</span>
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin">Admin Login</a>
+                        <a class="nav-link" href="/admin">
+                            <span class="d-none d-sm-inline">Admin Login</span>
+                            <span class="d-inline d-sm-none">Connexion Admin / Login</span>
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -37,66 +43,106 @@
             <div class="col-lg-8">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">ASBBIC Membership Card Application</h4>
+                        <h4 class="mb-0">
+                            <div>ASBBIC Membership Card Application</div>
+                            <div class="small fw-normal">Demande de carte de membre ASBBIC</div>
+                        </h4>
                     </div>
                     <div class="card-body">
                         <form id="memberForm">
-                            <h5 class="mb-4">Personal Information</h5>
+                            <h5 class="mb-2">Personal Information</h5>
+                            <p class="text-muted small mb-4">Informations personnelles</p>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <label for="fullName" class="form-label">
+                                        <div>Full Name <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Nom complet <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="text" class="form-control" id="fullName" name="fullName" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <label for="email" class="form-label">
+                                        <div>Email <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Email <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="email" class="form-control" id="email" name="email" required>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="birthDate" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                    <label for="birthDate" class="form-label">
+                                        <div>Date of Birth <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Date de naissance <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="date" class="form-control" id="birthDate" name="birthDate" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="birthPlace" class="form-label">Place of Birth <span class="text-danger">*</span></label>
+                                    <label for="birthPlace" class="form-label">
+                                        <div>Place of Birth <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Lieu de naissance <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="text" class="form-control" id="birthPlace" name="birthPlace" required>
                                 </div>
                             </div>
                             
-                            <h5 class="mb-4 mt-4">Identification Details</h5>
+                            <h5 class="mb-2 mt-4">Identification Details</h5>
+                            <p class="text-muted small mb-4">Détails d'identification</p>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="idNumber" class="form-label">ID Card Number <span class="text-danger">*</span></label>
+                                    <label for="idNumber" class="form-label">
+                                        <div>ID Card Number <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Numéro de CNI <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="text" class="form-control" id="idNumber" name="idNumber" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="activity" class="form-label">Business Activity <span class="text-danger">*</span></label>
+                                    <label for="activity" class="form-label">
+                                        <div>Business Activity <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Activité professionnelle <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="text" class="form-control" id="activity" name="activity" required>
                                 </div>
                             </div>
                             
-                            <h5 class="mb-4 mt-4">Contact Information</h5>
+                            <h5 class="mb-2 mt-4">Contact Information</h5>
+                            <p class="text-muted small mb-4">Coordonnées</p>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                    <label for="phone" class="form-label">
+                                        <div>Phone Number <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Numéro de téléphone <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="tel" class="form-control" id="phone" name="phone" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="photo" class="form-label">Passport Photo <span class="text-danger">*</span></label>
+                                    <label for="photo" class="form-label">
+                                        <div>Passport Photo <span class="text-danger">*</span></div>
+                                        <div class="small text-muted fw-normal">Photo d'identité <span class="text-danger">*</span></div>
+                                    </label>
                                     <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
-                                    <div class="form-text">Please upload a clear passport photo (JPG or PNG, max 2MB)</div>
+                                    <div class="form-text">
+                                        <div>Please upload a clear passport photo (JPG or PNG, max 2MB)</div>
+                                        <div class="small text-muted">Veuillez télécharger une photo d'identité nette (JPG ou PNG, max 2MB)</div>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-paper-plane me-2"></i> Submit Application
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    <span class="d-none d-sm-inline">Submit Application</span>
+                                    <span class="d-inline d-sm-none">Soumettre / Submit</span>
                                 </button>
                             </div>
                             
                             <div class="alert alert-info mt-4 mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Your application will be reviewed by our team. You will be notified via email once your membership is approved.
+                                <div class="d-flex">
+                                    <i class="fas fa-info-circle me-2 mt-1"></i>
+                                    <div>
+                                        <div>Your application will be reviewed by our team. You will be notified via email once your membership is approved.</div>
+                                        <div class="small mt-1">Votre demande sera examinée par notre équipe. Vous serez notifié par email une fois votre adhésion approuvée.</div>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>

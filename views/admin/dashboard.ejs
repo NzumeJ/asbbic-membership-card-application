@@ -64,27 +64,55 @@
                 </div>
             </div>
 
+            <!-- Search and Recent Members -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Search Members</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email, or ID...">
+                        <button class="btn btn-primary" type="button" id="searchButton">
+                            <i class="fas fa-search me-1"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recent Members -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Recent Members</h5>
-                    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">View All</a>
+                    <div>
+                        <button id="refreshMembers" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <a href="/admin/members" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-list"></i> View All
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover" id="membersTable">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
                                     <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
                                     <th>ID Number</th>
-                                    <th>Activity</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Will be populated by JavaScript -->
+                            <tbody id="membersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -117,66 +145,161 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const refreshButton = document.getElementById('refreshMembers');
+    const membersTableBody = document.getElementById('membersTableBody');
+    let allMembers = []; // To store all members for client-side filtering
+
     // Fetch dashboard stats
-    fetch('/admin/dashboard/stats', {
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('totalMembers').textContent = data.stats.totalMembers;
-            document.getElementById('activeMembers').textContent = data.stats.activeMembers;
-            document.getElementById('newMembers').textContent = data.stats.newMembers;
+    function loadDashboardStats() {
+        fetch('/admin/dashboard/stats', {
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('totalMembers').textContent = data.stats.totalMembers;
+                document.getElementById('activeMembers').textContent = data.stats.activeMembers;
+                document.getElementById('newMembers').textContent = data.stats.newMembers;
+            }
+        })
+        .catch(error => console.error('Error loading stats:', error));
+    }
+
+    // Function to render members in the table
+    function renderMembers(members) {
+        if (!members || members.length === 0) {
+            membersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        <i class="fas fa-users-slash fa-2x mb-2 d-block"></i>
+                        No members found
+                    </td>
+                </tr>`;
+            return;
         }
-    })
-    .catch(error => console.error('Error:', error));
 
-    // Fetch recent members
-    fetch('/admin/dashboard/recent-members', {
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const tbody = document.querySelector('#membersTable tbody');
-            tbody.innerHTML = ''; // Clear existing rows
+        membersTableBody.innerHTML = members.map(member => {
+            // Status badge
+            let statusBadge = '';
+            if (member.status === 'approved') {
+                statusBadge = '<span class="badge bg-success">Approved</span>';
+            } else if (member.status === 'rejected') {
+                statusBadge = '<span class="badge bg-danger">Rejected</span>';
+            } else {
+                statusBadge = '<span class="badge bg-warning">Pending</span>';
+            }
 
-            data.members.forEach(member => {
-                const row = document.createElement('tr');
-                
-                // Format date
-                const date = new Date(member.createdAt).toLocaleDateString();
-                
-                // Status badge
-                let statusBadge = '';
-                if (member.status === 'approved') {
-                    statusBadge = '<span class="badge bg-success">Approved</span>';
-                } else if (member.status === 'rejected') {
-                    statusBadge = '<span class="badge bg-danger">Rejected</span>';
-                } else {
-                    statusBadge = '<span class="badge bg-warning">Pending</span>';
-                }
-
-                row.innerHTML = `
-                    <td>${member._id}</td>
+            return `
+                <tr>
                     <td>${member.fullName || 'N/A'}</td>
+                    <td>${member.email || 'N/A'}</td>
+                    <td>${member.phone || 'N/A'}</td>
                     <td>${member.idNumber || 'N/A'}</td>
-                    <td>${member.activity || 'N/A'}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <a href="/admin/members/${member._id}" class="btn btn-sm btn-info">
                             <i class="fas fa-eye"></i> View
                         </a>
                     </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-    })
-    .catch(error => console.error('Error:', error));
+                </tr>`;
+        }).join('');
+    }
 
-    // Set up export button
-    document.querySelector('.btn-export')?.addEventListener('click', function() {
+    // Function to filter members based on search term
+    function filterMembers(searchTerm) {
+        if (!searchTerm) {
+            renderMembers(allMembers);
+            return;
+        }
+
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const filtered = allMembers.filter(member => 
+            (member.fullName && member.fullName.toLowerCase().includes(lowerSearchTerm)) ||
+            (member.email && member.email.toLowerCase().includes(lowerSearchTerm)) ||
+            (member.phone && member.phone.toLowerCase().includes(lowerSearchTerm)) ||
+            (member.idNumber && member.idNumber.toLowerCase().includes(lowerSearchTerm)) ||
+            (member._id && member._id.toLowerCase().includes(lowerSearchTerm))
+        );
+
+        renderMembers(filtered);
+    }
+
+    // Load recent members
+    function loadRecentMembers() {
+        // Show loading state
+        membersTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="mt-2">Loading members...</div>
+                </td>
+            </tr>`;
+
+        fetch('/admin/dashboard/recent-members', {
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.members) {
+                allMembers = data.members;
+                renderMembers(allMembers);
+            } else {
+                throw new Error('Failed to load members');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading recent members:', error);
+            membersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading members. 
+                        <button class="btn btn-sm btn-link p-0 ms-1" onclick="loadRecentMembers()">
+                            <i class="fas fa-sync-alt"></i> Try again
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    // Event listeners
+    searchButton.addEventListener('click', () => filterMembers(searchInput.value.trim()));
+    
+    searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            filterMembers(searchInput.value.trim());
+        } else if (e.key === 'Escape') {
+            searchInput.value = '';
+            filterMembers('');
+        }
+    });
+
+    refreshButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadRecentMembers();
+    });
+
+    // Debounce search input
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterMembers(searchInput.value.trim());
+        }, 300);
+    });
+
+    // Initial load
+    loadDashboardStats();
+    loadRecentMembers();
+
+    // Handle export button
+    document.querySelector('.btn-export')?.addEventListener('click', function(e) {
+        e.preventDefault();
         window.location.href = '/admin/members/export';
     });
 });

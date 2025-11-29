@@ -137,74 +137,83 @@ router.get("/", ensureAuthenticated, async (req, res) => {
     console.log('GET /api/members - Fetching members');
     
     try {
-        // Check if this is a DataTables request
-        const isDataTableRequest = req.query.draw !== undefined;
+        const { draw, start, length, search, order, columns } = req.query;
+        const searchValue = search?.value || '';
+        const page = start ? parseInt(start) / parseInt(length) + 1 : 1;
+        const limit = length ? parseInt(length) : 10;
+        const skip = start ? parseInt(start) : 0;
         
-        if (isDataTableRequest) {
-            // Handle DataTables server-side processing
-            const start = parseInt(req.query.start) || 0;
-            const length = parseInt(req.query.length) || 10;
-            const search = req.query.search?.value || '';
-            const draw = parseInt(req.query.draw) || 1;
+        // Handle sorting
+        let sort = { createdAt: -1 }; // Default sort
+        if (order && order[0] && columns) {
+            const sortColumn = columns[order[0].column]?.data || 'createdAt';
+            sort = { [sortColumn]: order[0].dir === 'asc' ? 1 : -1 };
+        }
 
-            // Build query for search
-            let query = {};
-            if (search) {
-                query = {
-                    $or: [
-                        { fullName: { $regex: search, $options: 'i' } },
-                        { email: { $regex: search, $options: 'i' } },
-                        { phone: { $regex: search, $options: 'i' } },
-                        { memberId: { $regex: search, $options: 'i' } }
-                    ]
-                };
-            }
+        // Build search query
+        const query = {};
+        if (searchValue) {
+            query.$or = [
+                { fullName: { $regex: searchValue, $options: 'i' } },
+                { email: { $regex: searchValue, $options: 'i' } },
+                { phone: { $regex: searchValue, $options: 'i' } },
+                { idNumber: { $regex: searchValue, $options: 'i' } }
+            ];
+        }
 
-            // Get counts and data in parallel
+        // Check if this is a DataTables request
+        if (draw) {
+            // Get counts and data in parallel for DataTables
             const [totalRecords, filteredRecords, members] = await Promise.all([
                 Member.countDocuments(),
-                search ? Member.countDocuments(query) : Promise.resolve(null),
+                Member.countDocuments(query),
                 Member.find(query)
-                    .sort({ createdAt: -1 })
-                    .skip(start)
-                    .limit(length)
+                    .sort(sort)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean()
             ]);
 
-            // Format data for DataTables
+            // Format response for DataTables
             const data = members.map(member => ({
                 _id: member._id,
-                fullName: member.fullName,
-                email: member.email,
-                phone: member.phone,
-                photo: member.photo,
-                status: member.status,
-                memberId: member.memberId,
-                birthDate: member.birthDate,
-                birthPlace: member.birthPlace,
-                activity: member.activity,
-                approvedAt: member.approvedAt,
-                createdAt: member.createdAt
+                fullName: member.fullName || 'N/A',
+                email: member.email || 'N/A',
+                phone: member.phone || 'N/A',
+                idNumber: member.idNumber || 'N/A',
+                activity: member.activity || 'N/A',
+                status: member.status || 'pending',
+                createdAt: member.createdAt,
+                actions: `
+                    <a href="/admin/members/${member._id}" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <button class="btn btn-sm btn-danger delete-member" data-id="${member._id}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                `
             }));
 
-            console.log(`Returning ${data.length} members (filtered from ${filteredRecords || totalRecords} total)`);
-
             return res.json({
-                draw,
+                draw: parseInt(draw),
                 recordsTotal: totalRecords,
-                recordsFiltered: search !== '' ? filteredRecords : totalRecords,
+                recordsFiltered: filteredRecords,
                 data: data
             });
         } else {
             // Handle regular API request (non-DataTables)
-            const members = await Member.find().sort({ createdAt: -1 });
-            console.log(`Returning ${members.length} members`);
+            const members = await Member.find(query)
+                .sort(sort)
+                .skip(skip)
+                .limit(limit)
+                .lean();
+                
             return res.json({
                 success: true,
                 count: members.length,
                 members
             });
         }
-
     } catch (err) {
         console.error('Error fetching members:', err);
         res.status(500).json({
